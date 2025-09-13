@@ -1,0 +1,1278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Promptify - AI Caption Generator</title>
+<style>
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            animation: fadeInPage 1s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        }
+
+        @keyframes fadeInPage {
+            0% {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+        }
+
+        .container.two-panel {
+            max-width: 1200px;
+    display: flex;
+            min-height: 80vh;
+            animation: expandContainer 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        }
+
+        @keyframes expandContainer {
+            0% {
+                max-width: 800px;
+                transform: scale(1);
+            }
+            50% {
+                max-width: 1000px;
+                transform: scale(1.02);
+            }
+            100% {
+                max-width: 1200px;
+                transform: scale(1);
+            }
+        }
+
+        .left-panel {
+            flex: 1;
+            padding: 40px;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+            opacity: 1;
+            transform: translateX(0);
+            position: relative;
+            overflow-y: auto;
+        }
+
+        .left-panel .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.2);
+        }
+
+        .left-panel .header h1 {
+    font-size: 24px;
+            margin-bottom: 10px;
+        }
+
+        .left-panel .header p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .left-panel .content {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .left-panel .form-group {
+            margin-bottom: 20px;
+        }
+
+        .left-panel .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .left-panel input[type="text"],
+        .left-panel textarea, 
+        .left-panel select {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e1e5e9;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            background: white;
+        }
+
+        .left-panel input[type="text"]:focus, 
+        .left-panel textarea:focus, 
+        .left-panel select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .left-panel .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            width: 100%;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .left-panel .btn:hover {
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.5);
+        }
+
+        .left-panel .file-upload {
+            position: relative;
+            display: inline-block;
+            width: 100%;
+        }
+
+        .left-panel .file-upload input[type="file"] {
+            position: absolute;
+            opacity: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+        }
+
+        .left-panel .file-upload-label {
+            display: block;
+            padding: 15px;
+            background: #f8f9fa;
+            border: 2px dashed #e1e5e9;
+            border-radius: 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: #666;
+        }
+
+        .left-panel .file-upload-label:hover {
+            background: #e9ecef;
+            border-color: #667eea;
+        }
+
+        .left-panel .options {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+
+        .right-panel {
+            flex: 1;
+            padding: 40px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+            transform: translateX(100%);
+            opacity: 0;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .right-panel::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            opacity: 0;
+            transition: opacity 0.6s ease;
+        }
+
+        .right-panel.show {
+            transform: translateX(0);
+            opacity: 1;
+            animation: slideInRight 0.8s cubic-bezier(0.4, 0, 0.2, 1) 0.5s forwards;
+        }
+
+        .right-panel.show::before {
+            opacity: 1;
+        }
+
+        @keyframes slideInRight {
+            0% {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            100% {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .left-panel.compressed {
+            flex: 0.6;
+            animation: compressLeft 0.8s cubic-bezier(0.4, 0, 0.2, 1) 0.2s forwards;
+        }
+
+        @keyframes compressLeft {
+            0% {
+                flex: 1;
+            }
+            100% {
+                flex: 0.6;
+            }
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+            position: relative;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+    font-weight: 700;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            margin-bottom: 30px;
+        }
+
+        .auth-buttons {
+    display: flex;
+    gap: 15px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        .btn-auth {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            padding: 12px 25px;
+            border-radius: 25px;
+            font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+            transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-block;
+            backdrop-filter: blur(10px);
+        }
+
+        .btn-auth:hover {
+            background: rgba(255, 255, 255, 0.3);
+            border-color: rgba(255, 255, 255, 0.5);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn-auth.primary {
+            background: rgba(255, 255, 255, 0.9);
+            color: #667eea;
+            border-color: rgba(255, 255, 255, 0.9);
+        }
+
+        .btn-auth.primary:hover {
+            background: white;
+            color: #667eea;
+            border-color: white;
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        input[type="text"], textarea, select {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e1e5e9;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+        }
+
+        input[type="text"]:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    transform: translateY(-2px);
+}
+
+        input[type="text"]:hover, textarea:hover, select:hover {
+            border-color: #667eea;
+            transform: translateY(-1px);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 120px;
+        }
+
+        .file-upload {
+            position: relative;
+            display: inline-block;
+            width: 100%;
+        }
+
+        .file-upload input[type="file"] {
+            position: absolute;
+            opacity: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+        }
+
+        .file-upload-label {
+            display: block;
+            padding: 15px;
+            border: 2px dashed #e1e5e9;
+            border-radius: 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: border-color 0.3s ease;
+            background: #f8f9fa;
+        }
+
+        .file-upload:hover .file-upload-label {
+            border-color: #667eea;
+            background: #f0f2ff;
+        }
+
+        .options {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            width: 100%;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .btn:hover::before {
+            left: 100%;
+        }
+
+        .btn:hover {
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.5);
+        }
+
+        .btn:active {
+            transform: translateY(-1px) scale(1.01);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .results {
+            margin-top: 30px;
+            padding: 25px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            display: none;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            flex: 1;
+            overflow-y: auto;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+        }
+
+        .results.show {
+            display: block;
+            opacity: 1;
+            transform: translateY(0);
+            animation: fadeInUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) 0.8s forwards;
+        }
+
+        @keyframes fadeInUp {
+            0% {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .right-panel .results {
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
+        }
+
+        .caption-item {
+            background: white;
+            padding: 20px;
+            margin-bottom: 15px;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+            position: relative;
+            opacity: 0;
+            transform: translateY(30px) scale(0.95);
+            animation: slideInCaption 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .caption-item:nth-child(1) { animation-delay: 0.1s; }
+        .caption-item:nth-child(2) { animation-delay: 0.2s; }
+        .caption-item:nth-child(3) { animation-delay: 0.3s; }
+
+        @keyframes slideInCaption {
+            0% {
+                opacity: 0;
+                transform: translateY(30px) scale(0.95);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .caption-item:hover {
+            transform: translateY(-5px) scale(1.02);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+        }
+
+        .right-panel .caption-item {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+            border-left: 4px solid rgba(255, 255, 255, 0.5);
+            backdrop-filter: blur(10px);
+        }
+
+        .right-panel .caption-item:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-5px) scale(1.02);
+        }
+
+        .results-header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 30px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+        }
+
+        .results-header h2 {
+            font-size: 28px;
+            margin-bottom: 10px;
+            font-weight: 700;
+            background: linear-gradient(45deg, #fff, #f0f0f0);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .results-header p {
+            font-size: 16px;
+            opacity: 0.9;
+            margin-bottom: 20px;
+        }
+
+        .results-header .btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 25px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+}
+
+        .results-header .btn:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+                max-width: 100%;
+                margin: 10px;
+            }
+            
+            .left-panel, .right-panel {
+                flex: none;
+                padding: 20px;
+            }
+            
+            .right-panel {
+                transform: translateY(100%);
+                opacity: 0;
+            }
+            
+            .right-panel.show {
+                transform: translateY(0);
+                opacity: 1;
+            }
+            
+            .left-panel.compressed {
+                flex: none;
+            }
+        }
+
+        .caption-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 10px;
+        }
+
+        .caption-text {
+            font-size: 16px;
+            line-height: 1.5;
+            margin-bottom: 10px;
+            flex: 1;
+            margin-right: 15px;
+        }
+
+        .copy-btn {
+            background: #667eea;
+            color: white;
+    border: none; 
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .copy-btn:hover {
+            background: #5a6fd8;
+            transform: translateY(-1px);
+        }
+
+        .copy-btn.copied {
+            background: #28a745;
+        }
+
+        .copy-btn.copied::after {
+            content: "✓";
+            margin-left: 5px;
+        }
+
+        .hashtags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .hashtag {
+            background: #667eea;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #667eea;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .loading.show {
+            opacity: 1;
+            transform: translateY(0);
+            animation: fadeInLoading 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        }
+
+        @keyframes fadeInLoading {
+            0% {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite, pulse 2s ease-in-out infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        @keyframes pulseButton {
+            0%, 100% { 
+                transform: scale(1);
+                box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+            }
+            50% { 
+                transform: scale(1.05);
+                box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
+            }
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error {
+            background: #fee;
+            color: #c33;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 20px;
+            border-left: 4px solid #c33;
+        }
+
+        @media (max-width: 768px) {
+            .options {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .content {
+                padding: 20px;
+            }
+
+            .auth-buttons {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .btn-auth {
+                padding: 10px 20px;
+                font-size: 14px;
+            }
+
+            .caption-header {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .caption-text {
+                margin-right: 0;
+                margin-bottom: 10px;
+            }
+
+            .copy-btn {
+                align-self: flex-start;
+            }
+}
+</style>
+</head>
+<body>
+    <div class="container" id="mainContainer">
+        <!-- Initial Centered Layout -->
+        <div class="header">
+            <h1>🪄✨ Promptify</h1>
+            <p>Transform your content into engaging social media captions with AI</p>
+            <div class="auth-buttons">
+                <a href="#" class="btn-auth" onclick="handleSignIn()">Sign In</a>
+                <a href="#" class="btn-auth primary" onclick="handleGetStarted()">Get Started</a>
+            </div>
+    </div>
+
+        <div class="content">
+            <form id="captionForm">
+                <div class="form-group">
+                    <label for="sentence">Your Caption</label>
+                    <textarea 
+                        id="sentence" 
+                        name="sentence" 
+                        placeholder="How are you feeling today?"
+                        required
+                    ></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="image">Upload Image (Optional)</label>
+                    <div class="file-upload">
+                        <input type="file" id="image" name="image" accept="image/*">
+                        <label for="image" class="file-upload-label">
+                            📸 Click to upload an image or drag and drop
+                        </label>
+                    </div>
+                </div>
+
+                <div class="options">
+                    <div class="form-group">
+                        <label for="platform">Platform</label>
+                        <select id="platform" name="platform">
+<option value="instagram">Instagram</option>
+                            <option value="twitter">Twitter</option>
+                            <option value="linkedin">LinkedIn</option>
+<option value="tiktok">TikTok</option>
+<option value="facebook">Facebook</option>
+</select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="tone">Tone</label>
+                        <select id="tone" name="tone">
+<option value="default">Default</option>
+                            <option value="professional">Professional</option>
+                            <option value="casual">Casual</option>
+<option value="funny">Funny</option>
+<option value="inspirational">Inspirational</option>
+                            <option value="trendy">Trendy</option>
+                        </select>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn" id="generateBtn">
+                    🚀 Generate Captions
+                </button>
+            </form>
+
+            <div id="loading" class="loading" style="display: none;">
+                <div class="spinner"></div>
+                <p>Generating amazing captions for you...</p>
+            </div>
+
+            <div id="error" class="error" style="display: none;"></div>
+        </div>
+
+        <!-- Two-Panel Layout (Hidden Initially) -->
+        <div class="left-panel" id="leftPanel" style="display: none; opacity: 1; transform: translateX(0);">
+            <div class="header">
+                <h1>🪄✨ Promptify</h1>
+                <p>Transform your content into engaging social media captions with AI</p>
+                <div class="auth-buttons">
+                    <a href="#" class="btn-auth" onclick="handleSignIn()">Sign In</a>
+                    <a href="#" class="btn-auth primary" onclick="handleGetStarted()">Get Started</a>
+                </div>
+            </div>
+
+            <div class="content">
+                <form id="captionForm2">
+                    <div class="form-group">
+                        <label for="sentence2">Your Caption</label>
+                        <textarea 
+                            id="sentence2" 
+                            name="sentence" 
+                            placeholder="How are you feeling today?"
+                            required
+                        ></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="image2">Upload Image (Optional)</label>
+                        <div class="file-upload">
+                            <input type="file" id="image2" name="image" accept="image/*">
+                            <label for="image2" class="file-upload-label">
+                                📸 Click to upload an image or drag and drop
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="options">
+                        <div class="form-group">
+                            <label for="platform2">Platform</label>
+                            <select id="platform2" name="platform">
+                                <option value="instagram">Instagram</option>
+                                <option value="twitter">Twitter</option>
+                                <option value="linkedin">LinkedIn</option>
+                                <option value="tiktok">TikTok</option>
+                                <option value="facebook">Facebook</option>
+</select>
+</div>
+
+                        <div class="form-group">
+                            <label for="tone2">Tone</label>
+                            <select id="tone2" name="tone">
+                                <option value="default">Default</option>
+                                <option value="professional">Professional</option>
+                                <option value="casual">Casual</option>
+                                <option value="funny">Funny</option>
+                                <option value="inspirational">Inspirational</option>
+                                <option value="trendy">Trendy</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn" id="generateBtn2">
+                        🚀 Generate Captions
+                    </button>
+                </form>
+
+                <div id="loading2" class="loading" style="display: none;">
+                    <div class="spinner"></div>
+                    <p>Generating amazing captions for you...</p>
+</div>
+
+                <div id="error2" class="error" style="display: none;"></div>
+            </div>
+        </div>
+
+        <!-- Right Panel: Results -->
+        <div class="right-panel" id="rightPanel">
+            <div class="results-header">
+                <h2>✨ Generated Captions</h2>
+                <p>Your AI-powered social media captions are ready!</p>
+            </div>
+            
+            <div id="results" class="results">
+                <div id="captionsList"></div>
+            </div>
+        </div>
+    </div>
+
+ <script>
+        // Handle Sign In button click
+        function handleSignIn() {
+            alert('Sign In functionality coming soon! For now, you can use the app without an account.');
+        }
+
+        // Handle Get Started button click
+        function handleGetStarted() {
+            // Scroll to the form section
+            document.querySelector('.content').scrollIntoView({ 
+                behavior: 'smooth' 
+            });
+            
+            // Focus on the textarea
+            setTimeout(() => {
+                document.getElementById('sentence').focus();
+            }, 500);
+        }
+
+        // Copy caption to clipboard
+        async function copyToClipboard(text, button) {
+            try {
+                await navigator.clipboard.writeText(text);
+                
+                // Update button to show copied state
+                const originalText = button.innerHTML;
+                button.innerHTML = '✓ Copied!';
+                button.classList.add('copied');
+                
+                // Reset button after 2 seconds
+                setTimeout(() => {
+                    button.innerHTML = originalText;
+                    button.classList.remove('copied');
+                }, 2000);
+                
+            } catch (err) {
+         // Fallback for older browsers
+         const textArea = document.createElement('textarea');
+         textArea.value = text;
+         document.body.appendChild(textArea);
+         textArea.select();
+         document.execCommand('copy');
+         document.body.removeChild(textArea);
+                
+                // Update button to show copied state
+                const originalText = button.innerHTML;
+                button.innerHTML = '✓ Copied!';
+                button.classList.add('copied');
+                
+                // Reset button after 2 seconds
+                setTimeout(() => {
+                    button.innerHTML = originalText;
+                    button.classList.remove('copied');
+                }, 2000);
+            }
+        }
+
+        document.getElementById('captionForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const sentence = document.getElementById('sentence').value;
+            const platform = document.getElementById('platform').value;
+            const tone = document.getElementById('tone').value;
+            const imageFile = document.getElementById('image').files[0];
+            
+            // Show loading state
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('loading').classList.add('show');
+            document.getElementById('results').classList.remove('show');
+            document.getElementById('error').style.display = 'none';
+            document.getElementById('generateBtn').disabled = true;
+            
+            try {
+                const formData = new FormData();
+                formData.append('sentence', sentence);
+                formData.append('platform', platform);
+                formData.append('tone', tone);
+                
+                if (imageFile) {
+                    formData.append('file', imageFile);
+                }
+                
+                const response = await fetch('/api/improve_caption', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                // Display results
+                const captionsList = document.getElementById('captionsList');
+                captionsList.innerHTML = '';
+                
+                data.captions.forEach((caption, index) => {
+                    const captionDiv = document.createElement('div');
+                    captionDiv.className = 'caption-item';
+                    
+                    // Create caption header with text and copy button
+                    const captionHeader = document.createElement('div');
+                    captionHeader.className = 'caption-header';
+                    
+                    const captionText = document.createElement('div');
+                    captionText.className = 'caption-text';
+                    captionText.textContent = caption;
+                    
+                    const copyBtn = document.createElement('button');
+                    copyBtn.className = 'copy-btn';
+                    copyBtn.innerHTML = '📋 Copy';
+                    copyBtn.onclick = () => copyToClipboard(caption, copyBtn);
+                    
+                    captionHeader.appendChild(captionText);
+                    captionHeader.appendChild(copyBtn);
+                    
+                    const hashtagsDiv = document.createElement('div');
+                    hashtagsDiv.className = 'hashtags';
+                    
+                    data.hashtags.forEach(tag => {
+                        const hashtagSpan = document.createElement('span');
+                        hashtagSpan.className = 'hashtag';
+                        hashtagSpan.textContent = tag;
+                        hashtagsDiv.appendChild(hashtagSpan);
+                    });
+                    
+                    captionDiv.appendChild(captionHeader);
+                    captionDiv.appendChild(hashtagsDiv);
+                    captionsList.appendChild(captionDiv);
+                });
+                
+                // Transition to two-panel layout
+                const mainContainer = document.getElementById('mainContainer');
+                const rightPanel = document.getElementById('rightPanel');
+                const leftPanel = document.getElementById('leftPanel');
+                
+                // Switch to two-panel layout
+                mainContainer.classList.add('two-panel');
+                
+                // Copy form data to left panel
+                document.getElementById('sentence2').value = sentence;
+                document.getElementById('platform2').value = platform;
+                document.getElementById('tone2').value = tone;
+                if (imageFile) {
+                    // Note: File inputs can't be programmatically set for security reasons
+                    // The user would need to re-upload if they want to generate again
+                }
+                
+                // Show panels with animation
+                setTimeout(() => {
+                    leftPanel.style.display = 'block';
+                    leftPanel.style.opacity = '1';
+                    leftPanel.style.transform = 'translateX(0)';
+                    
+                    // Animate left panel content
+                    const leftPanelContent = leftPanel.querySelector('.content');
+                    if (leftPanelContent) {
+                        leftPanelContent.style.opacity = '0';
+                        leftPanelContent.style.transform = 'translateY(20px)';
+                        setTimeout(() => {
+                            leftPanelContent.style.transition = 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)';
+                            leftPanelContent.style.opacity = '1';
+                            leftPanelContent.style.transform = 'translateY(0)';
+                        }, 200);
+                    }
+                    
+                    rightPanel.classList.add('show');
+                    leftPanel.classList.add('compressed');
+                    document.getElementById('results').classList.add('show');
+                    
+                    // Hide original form with smooth transition
+                    const originalHeader = document.querySelector('.header');
+                    const originalContent = document.querySelector('.content');
+                    
+                    originalHeader.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+                    originalContent.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+                    
+                    originalHeader.style.opacity = '0';
+                    originalContent.style.opacity = '0';
+                    originalHeader.style.transform = 'translateY(-20px)';
+                    originalContent.style.transform = 'translateY(-20px)';
+                    
+                    setTimeout(() => {
+                        originalHeader.style.display = 'none';
+                        originalContent.style.display = 'none';
+                    }, 500);
+                }, 100);
+                
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('error').textContent = 
+                    `Error generating captions: ${error.message}. Make sure the Python API is running on port 8000.`;
+                document.getElementById('error').style.display = 'block';
+            } finally {
+                document.getElementById('loading').classList.remove('show');
+                setTimeout(() => {
+                    document.getElementById('loading').style.display = 'none';
+                }, 500);
+                document.getElementById('generateBtn').disabled = false;
+            }
+        });
+
+        // Update file upload label when file is selected
+        document.getElementById('image').addEventListener('change', function(e) {
+            const label = document.querySelector('.file-upload-label');
+            if (e.target.files.length > 0) {
+                label.textContent = `📸 ${e.target.files[0].name}`;
+            } else {
+                label.textContent = '📸 Click to upload an image or drag and drop';
+            }
+        });
+        
+        // Function to reset layout to original state
+        function resetLayout() {
+            const mainContainer = document.getElementById('mainContainer');
+            const rightPanel = document.getElementById('rightPanel');
+            const leftPanel = document.getElementById('leftPanel');
+            const originalHeader = document.querySelector('.header');
+            const originalContent = document.querySelector('.content');
+            
+            // Hide panels with smooth transition
+            rightPanel.classList.remove('show');
+            leftPanel.style.display = 'none';
+            leftPanel.classList.remove('compressed');
+            
+            // Reset container
+            mainContainer.classList.remove('two-panel');
+            
+            // Show original form with smooth transition
+            originalHeader.style.display = 'block';
+            originalContent.style.display = 'block';
+            
+            // Reset styles for smooth fade-in
+            originalHeader.style.opacity = '0';
+            originalContent.style.opacity = '0';
+            originalHeader.style.transform = 'translateY(20px)';
+            originalContent.style.transform = 'translateY(20px)';
+            
+            // Animate in
+            setTimeout(() => {
+                originalHeader.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+                originalContent.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+                originalHeader.style.opacity = '1';
+                originalContent.style.opacity = '1';
+                originalHeader.style.transform = 'translateY(0)';
+                originalContent.style.transform = 'translateY(0)';
+            }, 100);
+            
+            // Clear results
+            document.getElementById('results').classList.remove('show');
+            document.getElementById('captionsList').innerHTML = '';
+            
+            // Clear form data
+            document.getElementById('sentence').value = '';
+            document.getElementById('platform').value = 'instagram';
+            document.getElementById('tone').value = 'default';
+            document.getElementById('image').value = '';
+            document.querySelector('.file-upload-label').textContent = '📸 Click to upload an image or drag and drop';
+        }
+        
+        // Add event listener for second form
+        document.getElementById('captionForm2').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const sentence = document.getElementById('sentence2').value;
+            const platform = document.getElementById('platform2').value;
+            const tone = document.getElementById('tone2').value;
+            const imageFile = document.getElementById('image2').files[0];
+            
+            // Show loading state
+            document.getElementById('loading2').style.display = 'block';
+            document.getElementById('results').classList.remove('show');
+            document.getElementById('error2').style.display = 'none';
+            document.getElementById('generateBtn2').disabled = true;
+            
+            try {
+                const formData = new FormData();
+                formData.append('sentence', sentence);
+                formData.append('platform', platform);
+                formData.append('tone', tone);
+                
+                if (imageFile) {
+                    formData.append('file', imageFile);
+                }
+                
+                const response = await fetch('/api/improve_caption', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                // Display results (same as before)
+                const captionsList = document.getElementById('captionsList');
+                captionsList.innerHTML = '';
+                
+                data.captions.forEach((caption, index) => {
+                    const captionDiv = document.createElement('div');
+                    captionDiv.className = 'caption-item';
+                    
+                    const captionHeader = document.createElement('div');
+                    captionHeader.className = 'caption-header';
+                    
+                    const captionText = document.createElement('div');
+                    captionText.className = 'caption-text';
+                    captionText.textContent = caption;
+                    
+                    const copyBtn = document.createElement('button');
+                    copyBtn.className = 'copy-btn';
+                    copyBtn.innerHTML = '📋 Copy';
+                    copyBtn.onclick = () => copyToClipboard(caption, copyBtn);
+                    
+                    captionHeader.appendChild(captionText);
+                    captionHeader.appendChild(copyBtn);
+                    
+                    const hashtagsDiv = document.createElement('div');
+                    hashtagsDiv.className = 'hashtags';
+                    
+                    data.hashtags.forEach(tag => {
+                        const hashtagSpan = document.createElement('span');
+                        hashtagSpan.className = 'hashtag';
+                        hashtagSpan.textContent = tag;
+                        hashtagsDiv.appendChild(hashtagSpan);
+                    });
+                    
+                    captionDiv.appendChild(captionHeader);
+                    captionDiv.appendChild(hashtagsDiv);
+                    captionsList.appendChild(captionDiv);
+                });
+                
+                document.getElementById('results').classList.add('show');
+                
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('error2').textContent = 
+                    `Error generating captions: ${error.message}. Make sure the Python API is running on port 8000.`;
+                document.getElementById('error2').style.display = 'block';
+            } finally {
+                document.getElementById('loading2').style.display = 'none';
+                document.getElementById('generateBtn2').disabled = false;
+            }
+        });
+        
+        // Update file upload label for second form
+        document.getElementById('image2').addEventListener('change', function(e) {
+            const label = document.querySelector('#image2 + .file-upload-label');
+            if (e.target.files.length > 0) {
+                label.textContent = `📸 ${e.target.files[0].name}`;
+            } else {
+                label.textContent = '📸 Click to upload an image or drag and drop';
+            }
+        });
+ </script>
+</body>
+</html>
