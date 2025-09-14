@@ -28,33 +28,59 @@ A full-stack web application that generates engaging social media captions using
 
 ### Option 2: Manual Setup
 
-1. **Install Python dependencies:**
+1. **Create and activate a Python virtual environment (recommended):**
    ```bash
-   pip3 install -r requirements.txt
+   # Create virtual environment
+   python3 -m venv promptify-env
+   
+   # Activate virtual environment
+   # On macOS/Linux:
+   source promptify-env/bin/activate
+   # On Windows:
+   # promptify-env\Scripts\activate
    ```
 
-2. **Install Node.js dependencies:**
+2. **Install Python dependencies:**
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+3. **Install Node.js dependencies:**
    ```bash
    npm install
    ```
 
-3. **Set your OpenAI API key:**
+4. **Set your OpenAI API key:**
    ```bash
    export OPENAI_API_KEY='your-api-key-here'
    ```
 
-4. **Start the Python backend (Terminal 1):**
+5. **Start the Python backend (Terminal 1):**
    ```bash
    uvicorn app:app --reload --port 8000
    ```
 
-5. **Start the Node.js frontend (Terminal 2):**
+6. **Start the Node.js frontend (Terminal 2):**
    ```bash
    npm start
    ```
 
-6. **Open your browser:**
+7. **Open your browser:**
    Navigate to `http://localhost:3000`
+
+### Virtual Environment Notes
+
+- **Why use a virtual environment?** It isolates your project dependencies from your system Python installation, preventing conflicts and ensuring reproducible builds.
+- **To deactivate the virtual environment** when you're done:
+  ```bash
+  deactivate
+  ```
+- **To reactivate later:**
+  ```bash
+  source promptify-env/bin/activate  # macOS/Linux
+  # or
+  promptify-env\Scripts\activate     # Windows
+  ```
 
 ## Project Structure
 
@@ -115,6 +141,12 @@ uvicorn app:app --reload --port 8000  # Auto-restart on changes
 - Ensure Python backend is running on port 8000
 - Check that all Python dependencies are installed
 - Verify your OpenAI API key is set
+- Make sure you're in the correct virtual environment (if using one)
+
+### Virtual Environment Issues
+- If you get "command not found" errors, ensure your virtual environment is activated
+- If dependencies aren't installing, try: `pip install --upgrade pip` first
+- If you're on Windows and having activation issues, try: `promptify-env\Scripts\activate.bat`
 
 ### CORS Issues
 - The Python backend includes CORS middleware for localhost:3000
